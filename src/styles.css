@@ -174,14 +174,51 @@ fieldset .chips { margin: 0; }
 
 /* Expense list */
 .expenses { list-style: none; padding: 0; margin: 0; }
-.expenses li { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
-.expenses li:last-child { border-bottom: 0; }
-.expenses li > div { display: grid; flex: 1; min-width: 0; }
+.expenses > li { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.expenses > li:last-child { border-bottom: 0; }
+.expenses > li > div { display: grid; flex: 1; min-width: 0; }
+
+/* One amount / Itemised switch */
+.segmented { display: grid; grid-template-columns: 1fr 1fr; padding: 4px; gap: 4px; background: var(--bg-alt); border: 1px solid var(--border); border-radius: 12px; }
+.segmented button { border: 0; background: transparent; color: var(--muted); padding: 8px 10px; border-radius: 9px; font-weight: 600; cursor: pointer; }
+.segmented button.on { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+
+/* Itemised bill */
+.items { display: grid; gap: 10px; }
+.item { border: 1px solid var(--border); border-radius: 12px; padding: 10px; display: grid; gap: 10px; }
+.item-top { display: grid; grid-template-columns: 1fr 96px 28px; gap: 8px; align-items: center; }
+.item .chips { margin: 0; gap: 6px; align-items: center; }
+.small-chip { padding: 4px 10px; font-size: 0.82rem; }
+.add-item { margin-top: 10px; width: 100%; }
+.icon-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* Service charge / SST */
+.charges { display: grid; gap: 8px; }
+.charge { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border: 1px solid var(--border); border-radius: 10px; font-weight: 500; cursor: pointer; }
+.charge input[type='checkbox'] { width: 18px; height: 18px; accent-color: var(--accent); flex: none; }
+.charge span { flex: 1; }
+.charge .pct { width: 64px; padding: 6px 8px; text-align: right; }
+.charge .pct:disabled { opacity: 0.45; }
+
+/* Live receipt */
+.receipt { background: var(--bg-alt); border-radius: 10px; padding: 12px 14px; font-family: ui-monospace, Consolas, monospace; font-size: 0.88rem; display: grid; gap: 2px; }
+.receipt div, .receipt-shares div { display: flex; justify-content: space-between; gap: 12px; }
+.receipt .dim { color: var(--muted); }
+.receipt-total { border-top: 1px dashed var(--muted); margin-top: 6px; padding-top: 6px; font-weight: 700; }
+.receipt-shares { display: grid !important; gap: 2px; border-top: 1px solid var(--border); margin-top: 8px; padding-top: 8px; color: var(--accent); }
+
+/* Itemised breakdown in the expense list */
+.breakdown { margin-top: 6px; }
+.breakdown summary { cursor: pointer; color: var(--accent); font-weight: 500; }
+.breakdown ul { list-style: none; padding: 8px 0 0; margin: 0; display: grid; gap: 4px; }
+.breakdown li { display: flex; justify-content: space-between; gap: 12px; }
+.breakdown .shares { border-top: 1px dashed var(--border); margin-top: 8px; font-weight: 600; }
 
 .footer { padding: 32px 20px 48px; text-align: center; }
 
 @media (max-width: 520px) {
   .row { grid-template-columns: 1fr; }
+  .item-top { grid-template-columns: 1fr 84px 28px; }
   .balances li { grid-template-columns: 1fr auto; gap: 4px 8px; }
   .balances .bar-track { grid-column: 1 / -1; grid-row: 2; }
   .topbar-actions { gap: 12px; font-size: 0.9rem; }

@@ -1,5 +1,5 @@
 import type { Expense, Transfer } from '../types';
-import { splitEvenly } from './money';
+import { expenseShares } from './bill';
 
 /**
  * Net balance per person, in cents.
@@ -13,10 +13,10 @@ export function computeBalances(personIds: string[], expenses: Expense[]): Map<s
     if (!balances.has(expense.paidBy) || sharers.length === 0) continue;
 
     balances.set(expense.paidBy, balances.get(expense.paidBy)! + expense.amountCents);
-    splitEvenly(expense.amountCents, sharers.length).forEach((share, i) => {
-      const id = sharers[i];
+    // Each person's share: an even split, or their items + charges if the bill is itemised
+    for (const [id, share] of expenseShares({ ...expense, splitBetween: sharers })) {
       balances.set(id, balances.get(id)! - share);
-    });
+    }
   }
 
   return balances;
