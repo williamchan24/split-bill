@@ -25,7 +25,7 @@ interface Row {
   unsure: boolean;
 }
 
-type Step = { kind: 'pick' } | { kind: 'scanning'; preview: string; progress: OcrProgress } | { kind: 'review' } | { kind: 'error'; message: string };
+type Step = { kind: 'pick' } | { kind: 'scanning'; preview: string; progress: OcrProgress } | { kind: 'review' } | { kind: 'error'; message: string; detail?: string };
 
 let nextKey = 1;
 const toRow = (i: ScannedItem): Row => ({ key: nextKey++, name: i.name, price: (i.priceCents / 100).toFixed(2), qty: i.qty, unsure: i.unsure });
@@ -50,19 +50,38 @@ export function ReceiptScanner({ open, onClose, onDone }: Props) {
 
   const scan = async (file: File | undefined) => {
     if (!file) return;
-    const canvas = await fileToCanvas(file).catch(() => null);
-    if (!canvas) return setStep({ kind: 'error', message: "Couldn't open that image. Try another photo." });
+    let canvas: HTMLCanvasElement;
+    try {
+      canvas = await fileToCanvas(file);
+    } catch (err) {
+      return setStep({ kind: 'error', message: "Couldn't open that image. Try taking the photo again, or pick a JPG/PNG.", detail: String(err) });
+    }
     const preview = canvas.toDataURL('image/jpeg', 0.6);
     setStep({ kind: 'scanning', preview, progress: { stage: 'loading', progress: 0 } });
+    const onProgress = (progress: OcrProgress) => setStep({ kind: 'scanning', preview, progress });
     try {
-      const lines = await readLines(canvas, (progress) => setStep({ kind: 'scanning', preview, progress }));
-      const parsed = parseReceipt(lines);
+      let lines = await readLines(canvas, onProgress);
+      let parsed = parseReceipt(lines);
+      // Nothing found? Try once more without our contrast boost, which can wash out
+      // dark or uneven photos (e.g. a photo of a screen). Keep whichever found more.
+      if (parsed.items.length === 0) {
+        const retryLines = await readLines(canvas, onProgress, false);
+        const retry = parseReceipt(retryLines);
+        if (retry.items.length > parsed.items.length) {
+          lines = retryLines;
+          parsed = retry;
+        }
+      }
       setReceipt(parsed);
       setRows(parsed.items.map(toRow));
       setRawText(lines.map((l) => `${l.text}   (${Math.round(l.confidence)}% sure)`).join('\n'));
       setStep({ kind: 'review' });
-    } catch {
-      setStep({ kind: 'error', message: "The scanner couldn't load. Check your internet connection (it's only needed the first time) and try again." });
+    } catch (err) {
+      setStep({
+        kind: 'error',
+        message: "The scanner couldn't start. Check your internet connection (it's only needed the first time you scan) and try again.",
+        detail: String(err),
+      });
     }
   };
 
@@ -136,6 +155,7 @@ export function ReceiptScanner({ open, onClose, onDone }: Props) {
       {step.kind === 'error' && (
         <>
           <p className="error">{step.message}</p>
+          {step.detail && <p className="small muted">Details: {step.detail}</p>}
           <button type="button" className="btn" onClick={() => setStep({ kind: 'pick' })}>
             Try again
           </button>
@@ -145,7 +165,9 @@ export function ReceiptScanner({ open, onClose, onDone }: Props) {
       {step.kind === 'review' && (
         <>
           {rows.length === 0 ? (
-            <p className="notice warn">No items found. Try a flatter, brighter photo, or add them below.</p>
+            <p className="notice warn">
+              No items found. Try again with the receipt flat, in good light and filling most of the photo, or add the items below.
+            </p>
           ) : (
             <p className="muted small">
               Fix anything it got wrong. <span className="unsure-key">Yellow</span> = it wasn't sure.
