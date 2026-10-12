@@ -3,6 +3,7 @@ import type { Charges, Expense, Item, Person } from '../types';
 import { formatRM, parseRM } from '../lib/money';
 import { allocate, applyCharges, hasCharges, itemTotals } from '../lib/bill';
 import { ChargesPicker, type ChargesForm } from './ChargesPicker';
+import { ReceiptScanner, type ScanResult } from './ReceiptScanner';
 
 interface Props {
   people: Person[];
@@ -35,6 +36,8 @@ export function ExpenseForm({ people, onAdd }: Props) {
   const [paidBy, setPaidBy] = useState('');
   const [splitBetween, setSplitBetween] = useState<string[]>([]);
   const [error, setError] = useState('');
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [scanNote, setScanNote] = useState('');
 
   const ids = useMemo(() => people.map((p) => p.id), [people]);
   const nameOf = (id: string) => people.find((p) => p.id === id)?.name ?? '?';
@@ -66,7 +69,25 @@ export function ExpenseForm({ people, onAdd }: Props) {
   const updateItem = (id: string, patch: Partial<ItemRow>) =>
     setItems((rows) => rows.map((r) => (r.id === id ? { ...r, ...patch } : r)));
 
+  // Fill the itemised form from a scanned receipt
+  const applyScan = (scan: ScanResult) => {
+    setScannerOpen(false);
+    setItemised(true);
+    setItems(scan.items.map((it) => ({ id: crypto.randomUUID(), name: it.name.slice(0, 40), price: (it.priceCents / 100).toFixed(2), sharedBy: [] })));
+    setCharges((c) => ({
+      service: scan.servicePct !== null,
+      servicePct: String(scan.servicePct ?? c.servicePct),
+      sst: scan.sstPct !== null,
+      sstPct: String(scan.sstPct ?? c.sstPct),
+      round5: scan.rounding,
+    }));
+    setDescription((d) => d || 'Receipt');
+    setScanNote(`Added ${scan.items.length} items from the receipt. Now tap who had each one.`);
+    setError('');
+  };
+
   const reset = () => {
+    setScanNote('');
     setDescription('');
     setAmount('');
     setItems([newItem()]);
@@ -137,6 +158,11 @@ export function ExpenseForm({ people, onAdd }: Props) {
             Itemised
           </button>
         </div>
+
+        <button type="button" className="btn btn-ghost scan-btn" onClick={() => setScannerOpen(true)}>
+          📷 Scan a receipt
+        </button>
+        {scanNote && itemised && <p className="notice ok small">{scanNote}</p>}
 
         {!itemised ? (
           <>
@@ -269,6 +295,7 @@ export function ExpenseForm({ people, onAdd }: Props) {
           Add expense
         </button>
       </form>
+      <ReceiptScanner open={scannerOpen} onClose={() => setScannerOpen(false)} onDone={applyScan} />
     </section>
   );
 }
