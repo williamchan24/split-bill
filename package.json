@@ -10,8 +10,10 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@tesseract.js-data/eng": "^1.0.0",
     "react": "^19.3.0",
-    "react-dom": "^19.3.0"
+    "react-dom": "^19.3.0",
+    "tesseract.js": "^7.0.0"
   },
   "devDependencies": {
     "@types/react": "^19.3.0",
