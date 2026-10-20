@@ -30,8 +30,12 @@ const UNSURE_BELOW = 75;
 const NOT_AN_ITEM =
   /\b(sub\s?total|total|amount|cash|change|balance|tender|visa|master|card|debit|credit|qr|e-?wallet|tng|grab|duitnow|invoice|inv|receipt|bill no|table|pax|date|time|cashier|thank|welcome|tel|phone|reg|item\s+qty|qty|discount|voucher|deposit)\b/i;
 
-/** A price at the end of a line: 12.50 / 12,50 / -1.00 */
-const PRICE_AT_END = /(-?\d{1,5}[.,]\d{2})\s*$/;
+/**
+ * A price at the end of a line: 12.50 / 12,50 / -1.00. Many Malaysian receipts print a
+ * tax code after the price ("14.90 S", "14.90 SR", "4.50 Z", "9.60*"), which the OCR
+ * sometimes misreads ("Ss", "8S"), so allow a short code (1–2 letters, a star or a hash) after it.
+ */
+const PRICE_AT_END = /(-?\d{1,5}[.,]\d{2})(?:\s*\d?[a-z*#]{1,2})?\s*$/i;
 
 /** Fix the classic OCR mix-ups inside numbers: O→0, l/I→1 (only right next to digits). */
 export function fixDigits(text: string): string {

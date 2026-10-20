@@ -44,6 +44,22 @@ describe('receipt parser', () => {
     expect(r.totalCents).toBe(2970);
   });
 
+  it('reads prices followed by a tax code, including OCR misreads of it', () => {
+    // Real Tesseract output from a receipt that prints "S" after each price
+    const r = parseReceipt(
+      lines('ITEM QTY AMT', 'Nasi Lemak Ayam 1 14.90 S', 'Mee Goreng Mamak 1 11.90 Ss', 'Iced Lemon Tea 1 4.50 8S',
+        'Teh O Ais 2 4.00 SR', 'Roti Tisu 1 6.50*', 'SUBTOTAL 41.80', 'SST 6% 2.51'),
+    );
+    expect(r.items.map((i) => [i.name, i.qty, i.priceCents])).toEqual([
+      ['Nasi Lemak Ayam', 1, 1490],
+      ['Mee Goreng Mamak', 1, 1190],
+      ['Iced Lemon Tea', 1, 450],
+      ['Teh O Ais', 2, 400],
+      ['Roti Tisu', 1, 650],
+    ]);
+    expect(r.subtotalCents).toBe(4180);
+  });
+
   it('returns nothing for a photo with no prices', () => {
     expect(parseReceipt(lines('hello', 'some random text')).items).toEqual([]);
   });
