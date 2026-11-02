@@ -2,7 +2,7 @@
 
 Split group expenses without the awkward maths. Add who's in, log who paid for what, and SplitBill works out the **fewest payments** needed to settle up. Then copy a summary straight into your WhatsApp group.
 
-**Live:** https://www.williamchanwinghong.com/projects/split-bill/
+**Live:** https://williamchan24.github.io/split-bill/
 
 ## Features
 - Add people and expenses in RM, and split each expense with everyone or only some people
